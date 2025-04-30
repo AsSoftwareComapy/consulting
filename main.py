@@ -26,16 +26,15 @@ class MessageRequest(BaseModel):
 async def send_whatsapp_message(payload: MessageRequest):
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     }
 
-    data =     { "messaging_product": "whatsapp"
-     , "to": payload.to,
-     "type": "template",
-     "template": 
-         {
-             "name": "hello_world",
-             "language": { "code": "en_US" } } }
+    data = {
+        "messaging_product": "whatsapp",
+        "to": payload.to,
+        "type": "template",
+        "template": {"name": "hello_world", "language": {"code": "en_US"}},
+    }
 
     async with httpx.AsyncClient() as client:
         response = await client.post(WHATSAPP_API_URL, json=data, headers=headers)
@@ -44,5 +43,3 @@ async def send_whatsapp_message(payload: MessageRequest):
         raise HTTPException(status_code=500, detail=response.text)
 
     return {"status": "message sent", "response": response.json()}
-
-
