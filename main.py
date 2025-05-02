@@ -1,8 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
 import httpx
 import os
 from dotenv import load_dotenv
+import pandas as pd
+from io import BytesIO
 
 load_dotenv()
 
@@ -43,3 +45,42 @@ async def send_whatsapp_message(payload: MessageRequest):
         raise HTTPException(status_code=500, detail=response.text)
 
     return {"status": "message sent", "response": response.json()}
+
+
+
+@app.post('/send_bulk_messages')
+async def send_bulk_messages(file: UploadFile = File(...)):
+    if not file.filename.endswith(".xlsx"):
+        raise HTTPException(status_code=400, detail="File must be an .xlsx Excel file")
+
+    content = await file.read()
+    df = pd.read_excel(BytesIO(content))
+
+    required_columns = {"Full Name", "Mobile No", "location", "qualification"}
+    if not required_columns.issubset(df.columns):
+        raise HTTPException(status_code=400, detail=f"Missing required columns: {required_columns}")
+
+    results = []
+    headers = {
+        "Authorization": f"Bearer {ACCESS_TOKEN}",
+        "Content-Type": "application/json",
+    }
+    for _, row in df.iterrows():
+        to = str(row["Mobile No"]).strip()
+        if not to.startswith("+"):
+            to = "91" + to 
+        name = str(row["Full Name"])
+        location = str(row["location"])
+        qualification = str(row["qualification"])
+        data = {
+            "messaging_product": "whatsapp",
+            "to": to,
+            "type": "template",
+            "template": {"name": "hello_world", "language": {"code": "en_US"}},
+        }
+        async with httpx.AsyncClient() as client:
+            response = await client.post(WHATSAPP_API_URL, json=data, headers=headers)
+        results.append({
+            "to": to,"status":response.status_code,"response":response.text
+        })
+    return {'res':results}
