@@ -5,6 +5,10 @@ import os
 from dotenv import load_dotenv
 import pandas as pd
 from io import BytesIO
+from model import WhatsAppMessageLog
+from database import SessionLocal
+from datetime import datetime, timezone
+
 
 load_dotenv()
 
@@ -61,6 +65,7 @@ async def send_bulk_messages(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail=f"Missing required columns: {required_columns}")
 
     results = []
+    session = SessionLocal()
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
         "Content-Type": "application/json",
@@ -83,4 +88,34 @@ async def send_bulk_messages(file: UploadFile = File(...)):
         results.append({
             "to": to,"status":response.status_code,"response":response.text
         })
+        log = WhatsAppMessageLog(
+            phone_number=to,
+            full_name=name,
+            location=location,
+            qualification=qualification,
+            status_code=response.status_code,
+            response_text=response.text,
+            sent_at=datetime.now(timezone.utc)
+        )
+        session.add(log)
+        session.commit()
     return {'res':results}
+
+
+@app.get('/get_logs')
+def method_get_logs():
+    session = SessionLocal()
+    logs = session.query(WhatsAppMessageLog).order_by(WhatsAppMessageLog.sent_at.desc()).all()
+    return [
+        {
+            "id": log.id,
+            "phone_number": log.phone_number,
+            "full_name": log.full_name,
+            "location": log.location,
+            "qualification": log.qualification,
+            "status_code": log.status_code,
+            "response_text": log.response_text,
+            "sent_at": log.sent_at.isoformat()
+        }
+        for log in logs
+    ]
