@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException,Request,Query
 from pydantic import BaseModel
 import httpx
 import os
@@ -8,7 +8,7 @@ from io import BytesIO
 from model import WhatsAppMessageLog
 from database import SessionLocal
 from datetime import datetime, timezone
-
+import json
 
 load_dotenv()
 
@@ -119,3 +119,21 @@ def method_get_logs():
         }
         for log in logs
     ]
+    
+@app.post('/webhook')
+async def method_webhook_call(request: Request):
+    body = await request.json()
+    print("📨 Incoming webhook message:", json.dumps(body, indent=2))    
+    return {}
+
+
+@app.get("/webhook")
+def verify_webhook(
+    hub_mode: str = Query(default=None, alias="hub.mode"),
+    hub_token: str = Query(default=None, alias="hub.verify_token"),
+    hub_challenge: str = Query(default=None, alias="hub.challenge"),
+):
+    # print(hub_token)
+    # print(hub_mode)
+    # print(hub_challenge)
+    return int(hub_challenge)
