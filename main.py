@@ -1,14 +1,14 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException,Request,Query
-from pydantic import BaseModel
 import httpx
 import os
 from dotenv import load_dotenv
 import pandas as pd
 from io import BytesIO
-from model import WhatsAppMessageLog
+from tables import WhatsAppMessageLog
 from database import SessionLocal
 from datetime import datetime, timezone
 import json
+from models import *
 
 load_dotenv()
 
@@ -22,22 +22,43 @@ app.add_middleware(
     allow_headers=["*"],
 )
 WHATSAPP_API_URL = f"https://graph.facebook.com/v19.0/{os.getenv('PHONE_NUMBER_ID')}/messages"
-ACCESS_TOKEN = os.getenv("WHATSAPP_ACCESS_TOKEN")
+ACCESS_TOKEN = "Bearer EABhUZAQcZAwSQBO3naKxLr0vFA81k6ul78PFsD4qOObsQ2v8M7miFBW01IoPDc26h91rm5KaiAWWjcv7aSN9V42ZBxJOnn2rldFbb61dcnLOnAlbEkvQ6DpbkJvyR2PoonNfLvSOsOBp5F5GwA77McY2mupv9ZCotmf8HquQlqXCqQBJUf5T01hclg9e8GN1Uq9znCx6yWWTuJfiQUoC40Yz64u2ZAdhkJKkYhgXdTyER"
 
-class MessageRequest(BaseModel):
-    to: str
-    message: str
 
-@app.post("/send-message/")
-async def send_whatsapp_message(payload: MessageRequest):
+# @app.post("/send-message/")
+# async def send_whatsapp_message(payload: MessageRequest):
+#     headers = {
+#         "Authorization": f"Bearer {ACCESS_TOKEN}",
+#         "Content-Type": "application/json",
+#     }
+
+#     data = {
+#         "messaging_product": "whatsapp",
+#         "to": payload.to,
+#         "type": "template",
+#         "template": {"name": "hello_world", "language": {"code": "en_US"}},
+#     }
+
+#     async with httpx.AsyncClient() as client:
+#         response = await client.post(WHATSAPP_API_URL, json=data, headers=headers)
+
+#     if response.status_code != 200:
+#         raise HTTPException(status_code=500, detail=response.text)
+
+#     return {"status": "message sent", "response": response.json()}
+
+
+
+@app.post("/send-message-form/")
+async def send_whatsapp_message_form(payload: SingleMessageRequest):
     headers = {
-        "Authorization": f"Bearer {ACCESS_TOKEN}",
+        "Authorization": f"{ACCESS_TOKEN}",
         "Content-Type": "application/json",
     }
-
+    print(headers)
     data = {
         "messaging_product": "whatsapp",
-        "to": payload.to,
+        "to": payload.phone_number,
         "type": "template",
         "template": {"name": "hello_world", "language": {"code": "en_US"}},
     }
@@ -45,10 +66,10 @@ async def send_whatsapp_message(payload: MessageRequest):
     async with httpx.AsyncClient() as client:
         response = await client.post(WHATSAPP_API_URL, json=data, headers=headers)
 
-    if response.status_code != 200:
-        raise HTTPException(status_code=500, detail=response.text)
+    # if response.status_code != 200:
+    #     raise HTTPException(status_code=500, detail=response.text)
 
-    return {"status": "message sent", "response": response.json()}
+    return {"status": "message sent", "response": response.json(),"data":payload}
 
 
 
@@ -102,6 +123,7 @@ async def send_bulk_messages(file: UploadFile = File(...)):
     return {'res':results}
 
 
+
 @app.get('/get_logs')
 def method_get_logs():
     session = SessionLocal()
@@ -120,11 +142,14 @@ def method_get_logs():
         for log in logs
     ]
     
+    
+    
 @app.post('/webhook')
 async def method_webhook_call(request: Request):
     body = await request.json()
     print("📨 Incoming webhook message:", json.dumps(body, indent=2))    
     return {}
+
 
 
 @app.get("/webhook")
