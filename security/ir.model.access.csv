@@ -1,2 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_consulting_consulting,consulting.consulting,model_consulting_consulting,base.group_user,1,1,1,1
+access_consulting_document,consulting.document,model_consulting_document,base.group_user,1,1,1,1
+access_consulting_whatsapp_message_log,consulting.whatsapp.message.log,model_consulting_whatsapp_message_log,base.group_user,1,1,1,1
