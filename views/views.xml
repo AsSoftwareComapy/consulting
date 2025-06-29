@@ -39,6 +39,7 @@
                     <field name="location"/>
                     <field name="qualification"/>
                     <field name="status_code"/>
+                    <field name="reply_text"/>
                     <field name="sent_at"/>
                   </list>
                 </field>

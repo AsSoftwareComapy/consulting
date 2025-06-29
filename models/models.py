@@ -7,7 +7,7 @@ from io import BytesIO
 import openpyxl
 
 WHATSAPP_API_URL = f"https://graph.facebook.com/v19.0/337320726121483/messages"
-ACCESS_TOKEN = "Bearer EAAO5XN3WP2YBO3wRvn5ELxn3g35cSiaGZB6DP469UyX0eysAt6fmdONvmEOvS76v9dDPUg7LleIMxUvu482mzmTf3QzlDQpgZBlZAi6iZCkSaDedZAZA3XsfZA5RZAMiDPmcksfBiil9woNRTWTXqHBIr7ToQOZBt8nlTRZBwEKZAJUN5aVKRXQGn6gokkTNZCG2b0pEUTyh64g0Emi1gaN0lmL82Hm5y8X0r0JpRLfocWHd4JyJgsBJ1ZCofYlfWGMR48YAZD"
+ACCESS_TOKEN = "Bearer EAAO5XN3WP2YBO4CSvZAFfh0k7ZCHsOi9ck5v2hDMZBYK0wIV0ZABizqmWoZAd8yYwrw2VgeMEE789aBDwiCBieiZCYta0YJzTFbkyG8a3glpvZBkRzNxXiIAw5sZASDrinWU4aLtt5NGnFIdDCoELdZBMPQeEpKgXgXCsG6Tj0SiV717k0Y4zGJJyiSt3m5zfeEu1xMZBYcPtmQQZBteTik4WQWA4iDjhuZA0dCyFlGxMe4q"
 
 
 
@@ -33,11 +33,34 @@ class ConsultingDocument(models.Model):
             "Authorization": f"{ACCESS_TOKEN}",
             "Content-Type": "application/json",
         }
+        # data = {
+        #     "messaging_product": "whatsapp",
+        #     "to": f"91{mobile}",
+        #     "type": "template",
+        #     "template": {"name": "hello_world", "language": {"code": "en_US"}},
+        # }
+        mobile = f"91{mobile}"
         data = {
             "messaging_product": "whatsapp",
-            "to": f"91{mobile}",
+            "to": mobile,
             "type": "template",
-            "template": {"name": "hello_world", "language": {"code": "en_US"}},
+            "template": {
+                "name": "test_user_accept",
+                "language": {
+                    "code": "en"
+                },
+                "components": [
+                    {
+                        "type": "body",
+                        "parameters": [
+                            {
+                                "type": "text",
+                                "text": "demo user" 
+                            }
+                        ]
+                    }
+                ]
+            }
         }
         try:
             response = requests.post(WHATSAPP_API_URL, json=data, headers=headers)
@@ -98,3 +121,5 @@ class ConsultingWhatsAppMessageLog(models.Model):
         string="Consulting Document",
         ondelete='cascade'
     )
+    reply_text = fields.Char(string="Reply Text")
+    reply_date = fields.Datetime(string="Reply Date")
