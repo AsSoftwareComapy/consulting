@@ -33,12 +33,6 @@ class ConsultingDocument(models.Model):
             "Authorization": f"{ACCESS_TOKEN}",
             "Content-Type": "application/json",
         }
-        # data = {
-        #     "messaging_product": "whatsapp",
-        #     "to": f"91{mobile}",
-        #     "type": "template",
-        #     "template": {"name": "hello_world", "language": {"code": "en_US"}},
-        # }
         mobile = f"91{mobile}"
         data = {
             "messaging_product": "whatsapp",
